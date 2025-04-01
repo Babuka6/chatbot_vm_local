@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package tfidf;
+
+// This specifies the Go import path
+option go_package = "tfidf-service/proto/proto";
+
+service DocumentScorer {
+    rpc RetrieveDocument (Query) returns (Document);
+}
+
+message Query {
+    string text = 1;
+}
+
+message Document {
+    string text = 1;
+}
