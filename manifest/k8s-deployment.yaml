@@ -1,0 +1,135 @@
+---
+# -----------------------------
+# 1) chatbot-service Deployment
+# -----------------------------
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chatbot-service-deployment
+spec:
+  replicas: 3  # Scale to 3 replicas
+  selector:
+    matchLabels:
+      app: chatbot-service
+  template:
+    metadata:
+      labels:
+        app: chatbot-service
+    spec:
+      containers:
+      - name: chatbot-service
+        image: c3black/chatbot-service:latest
+        ports:
+        - containerPort: 5000
+        resources:
+          requests:
+            cpu: "2"      # Request 2 CPU cores per replica
+            memory: "2Gi"  # Request 3Gi of memory per replica
+          limits:
+            cpu: "2"      # Limit each replica to 2 CPU cores
+            memory: "2Gi"  # Limit each replica's memory to 4Gi
+
+---
+# --------------------------
+# chatbot-service ClusterIP
+# --------------------------
+apiVersion: v1
+kind: Service
+metadata:
+  name: chatbot-service
+spec:
+  selector:
+    app: chatbot-service
+  ports:
+    - protocol: TCP
+      port: 5000            # Service port inside the cluster
+      targetPort: 5000      # Container port
+  type: ClusterIP
+
+---
+# ----------------------------
+# 2) tfidf-service Deployment
+# ----------------------------
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tfidf-service-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tfidf-service
+  template:
+    metadata:
+      labels:
+        app: tfidf-service
+    spec:
+      containers:
+      - name: tfidf-service
+        image: c3black/tfidf-service:latest
+        ports:
+        - containerPort: 50051  # The gRPC port
+        resources:
+          requests:
+            cpu: "1"      # Request 2 CPU cores per replica
+            memory: "2Gi"  # Request 3Gi of memory per replica
+          limits:
+            cpu: "1"      # Limit each replica to 2 CPU cores
+            memory: "2Gi"  # Limit each replica's memory to 4Gi
+
+---
+# ------------------------
+# tfidf-service ClusterIP
+# ------------------------
+apiVersion: v1
+kind: Service
+metadata:
+  name: tfidf-service
+spec:
+  selector:
+    app: tfidf-service
+  ports:
+    - protocol: TCP
+      port: 50051
+      targetPort: 50051
+  type: ClusterIP
+---
+# -----------------------
+# 3) frontend Deployment
+# -----------------------
+# apiVersion: apps/v1
+# kind: Deployment
+# metadata:
+#   name: frontend-deployment
+# spec:
+#   replicas: 1
+#   selector:
+#     matchLabels:
+#       app: frontend
+#   template:
+#     metadata:
+#       labels:
+#         app: frontend
+#     spec:
+#       containers:
+#       - name: frontend
+#         image: <your-registry-username>/frontend:latest
+#         ports:
+#         - containerPort: 80
+# ---
+# ----------------
+# frontend Service
+# ----------------
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: frontend-service
+# spec:
+#   selector:
+#     app: frontend
+#   ports:
+#     - protocol: TCP
+#       port: 80
+#       targetPort: 80
+#   # With NodePort, you can access from outside the cluster at <NodeIP>:<NodePort>
+#   type: NodePort
